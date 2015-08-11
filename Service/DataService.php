@@ -23,14 +23,11 @@ class DataService {
 
     public $connection;
 
-    private $passwordOptions;
-
     public function __construct($config) {
         $this->host = $config["db.host"];
         $this->database = $config["db.database"];
         $this->username = $config["db.username"];
         $this->password = $config["db.password"];
-        $this->passwordOptions = $config["hashOptions"];
         
         $this->debugMode = !!$config["debug"];
         $this->establishConnection();
@@ -67,7 +64,7 @@ class DataService {
             // ensure encoding is ok
             mysqli_query($this->connection, "SET NAMES utf8");
             mysqli_query($this->connection, "SET CHARACTER SET utf8");
-            mysqli_query($this->connection, "SET SESSION time_zone = '+2:00'");
+            mysqli_query($this->connection, "SET SESSION time_zone = '+0:00'");
             if (mysqli_connect_errno()) {
                 throw new \Exception('Failed to connect to MySQL: ' . mysqli_connect_error());
             }
