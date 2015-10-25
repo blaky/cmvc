@@ -5,6 +5,7 @@ namespace CacaoFw\Service;
 use CacaoFw\DataAccessObject;
 use CacaoFw\GenericDAO;
 
+
 class DataService {
 
     private static $daoCache = array();
@@ -28,7 +29,7 @@ class DataService {
         $this->database = $config["db.database"];
         $this->username = $config["db.username"];
         $this->password = $config["db.password"];
-        
+
         $this->debugMode = !!$config["debug"];
         $this->establishConnection();
         self::$ds = $this;
@@ -51,7 +52,7 @@ class DataService {
             } else if (class_exists("App\\Model\\{$modelName}")) {
                 $dao = new GenericDAO(self::$ds, $modelName);
             }
-            
+
             self::$daoCache[$modelName] = $dao;
             return $dao;
         }
@@ -59,15 +60,21 @@ class DataService {
 
     public function establishConnection() {
         if (!$this->connection) {
-            $this->connection = mysqli_connect($this->host, $this->username, $this->password, $this->database);
-            
+            try {
+                $this->connection = mysqli_connect($this->host, $this->username, $this->password,
+                        $this->database);
+            } catch (\ErrorException $ex) {
+                die("Failed to connect to database: " . $ex->getMessage());
+            }
+
+            if (mysqli_connect_errno()) {
+                throw new \Exception('Failed to connect to MySQL: ' . mysqli_connect_error());
+            }
+
             // ensure encoding is ok
             mysqli_query($this->connection, "SET NAMES utf8");
             mysqli_query($this->connection, "SET CHARACTER SET utf8");
             mysqli_query($this->connection, "SET SESSION time_zone = '+0:00'");
-            if (mysqli_connect_errno()) {
-                throw new \Exception('Failed to connect to MySQL: ' . mysqli_connect_error());
-            }
         }
     }
 
@@ -102,7 +109,7 @@ class DataService {
         if ($this->debugMode) {
             echo "<pre>SQL query: " . $sql . "</pre>";
         }
-        
+
         $result = mysqli_query($this->connection, $sql);
         if (!$result) {
             throw new \Exception("Database operation error: " . mysqli_error($this->connection));
