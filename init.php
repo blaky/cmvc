@@ -17,7 +17,7 @@ if (!function_exists("money_format")) {
 
 function cacaoClassLoader($class) {
     $classPath = preg_split("/\\\\/", $class);
-    
+
     if ($classPath[0] === 'CacaoFw') {
         // Load framework classes.
         $path = join(array_splice($classPath, 1), "//");
@@ -47,8 +47,33 @@ function errorHandler($errno, $errstr, $errfile, $errline, array $errcontext) {
     if (0 === error_reporting()) {
         return false;
     }
-    
+
     throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+}
+
+function string($name, $print = true, $langcode = null) {
+    global $LANG;
+    if (!$langcode) {
+        $langcode = $LANG->code;
+    }
+
+    if (!isset($LANG->strings[$langcode])) {
+        $langcode = 'en';
+    }
+
+    if (isset($LANG->strings[$langcode][$name])) {
+        if ($print) {
+            echo $LANG->strings[$langcode][$name];
+        } else {
+            return $LANG->strings[$langcode][$name];
+        }
+    } else {
+        if ($print) {
+            echo "!NF->$name<-NF!";
+        } else {
+            return "!NF->$name<-NF!";
+        }
+    }
 }
 
 require_once __DIR__ . '/../app/constants.php';

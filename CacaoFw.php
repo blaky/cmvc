@@ -12,6 +12,7 @@ use CacaoFw\Security\AccessControl;
 use CacaoFw\Vendor\MobileDetect;
 use CacaoFw\Vendor\SimpleImage;
 
+
 /**
  *
  * @author Bence
@@ -81,26 +82,28 @@ class CacaoFw {
 
     public function __construct(\CacaoFw\Utils $u) {
         global $DS, $CFW;
-        $this->setUpConfig();
-        
+
         $this->u = $u;
-        
+
+        $this->setUpConfig();
+        $this->setUpLocalisation();
+
         // Prepare data access.
         $this->ds = new DataService($this->config);
         $DS = $this->ds;
-        
+
         $this->mobileDetect = new MobileDetect();
-        
+
         $this->builderService = new BuilderService($this, $this->u);
-        
+
         // read components and set up routing
         // $this->mapperService = new MapperService($this);
-        
+
         $this->routerService = new RouterService($this);
-        
+
         // prepare security
         $this->accessControl = new AccessControl($this);
-        
+
         $CFW = $this;
         $this->processRequest();
     }
@@ -110,12 +113,37 @@ class CacaoFw {
         // security rules
         // no authentication required
         $this->config["authpage"] = array();
-        
+
         // password hasing settings
-        $this->config["hashOptions"] = [
-                'cost' => 11, 
-                'salt' => $this->config["passwordsalt"]
+        $this->config["hashOptions"] = ['cost' => 11, 'salt' => $this->config["passwordsalt"]
         ];
+    }
+
+    private function setUpLocalisation() {
+        $langpref = 'en';
+
+        if (isset($_REQUEST['lang'])) {
+            // TODO: VALIDATE
+            $langpref = $_REQUEST['lang'];
+        } else if (isset($_COOKIE['lang'])) {
+            $langpref = $_COOKIE['lang'];
+        }
+
+        setcookie('lang', $langpref, 100000000000);
+
+        global $LANG;
+        $LANG = new \stdClass();
+        $LANG->code = $langpref;
+        $LANG->strings = array();
+        foreach (scandir($this->u->getAppDir() . '/lang/') as $file) {
+            $info = pathinfo ($file);
+            if ($info["extension"] == 'php') {
+                $strings = array();
+                require_once $this->u->getAppDir() . '/lang/' . $file;
+                $LANG->strings[$info["filename"]] = $strings;
+            }
+        }
+
     }
 
     /**
@@ -172,7 +200,7 @@ class CacaoFw {
             } else if ($extension == "pdf") {
                 header('Content-Type: text/html');
             }
-            
+
             header('Content-Length: ' . filesize($filePath));
             readfile($filePath);
             exit();
@@ -184,17 +212,17 @@ class CacaoFw {
     private function processRequest() {
         $requestUri = $_SERVER['REQUEST_URI'];
         $requestPath = preg_replace(
-                '/' . preg_quote(".html", '/') . '|' . preg_quote(".json", '/') . '|' . preg_quote(".do", '/') . '*$/', '', 
-                strtok($requestUri, '?'));
-        
+                '/' . preg_quote(".html", '/') . '|' . preg_quote(".json", '/') . '|' .
+                         preg_quote(".do", '/') . '*$/', '', strtok($requestUri, '?'));
+
         // Handle index request.
         if ($requestPath == "/") {
             $requestPath = "/index";
         }
-        
+
         $requestParams = $this->getRequestParams($requestPath);
         $readyToExit = false;
-        
+
         while (!$readyToExit) {
             $result = $this->routeParams($requestParams, $requestPath);
             if (!is_null($result) && get_class($result) == "InternalRedirectResponse") {
@@ -224,7 +252,7 @@ class CacaoFw {
             $responseObject = new InternalServerErrorResponse($ex->getMessage(), $ex->getTrace());
             $responseObject->build($requestParams, $this);
         }
-        
+
         $this->ds->commitChanges();
         return $responseObject;
     }
