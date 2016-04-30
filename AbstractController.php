@@ -5,9 +5,9 @@ namespace CacaoFw;
 use CacaoFw\Security\CacaoUser;
 
 abstract class AbstractController {
-
+    
     protected $cfw;
-
+    
     /**
      *
      * @var CacaoUser
@@ -16,10 +16,11 @@ abstract class AbstractController {
 
     /**
      *
-     * @param CacaoFw $cfw
+     * @param CacaoFw $cfw            
      */
-    public function __construct(CacaoFw $cfw) {
-        $this->cfw = $cfw;
+    public function __construct() {
+        global $CFW;
+        $this->cfw = $CFW;
         $this->user = $this->cfw->getCurrentUser();
     }
 
@@ -31,10 +32,9 @@ abstract class AbstractController {
      * @return multitype:AbstractResponse
      */
     public function getEndpoints() {
-        return array(
-                "index" => function ($params) {
-                    return new ViewResponse($this->getName(), array(), null);
-                }
-        );
+        return array("index" => function ($params) {
+            return new ViewResponse($this->getName(), array(), null);
+        });
     }
+
 }

@@ -4,7 +4,8 @@ session_start();
 use CacaoFw\CacaoFw;
 use CacaoFw\Utils;
 
-global $u;
+global $u, $starttime;
+$starttime = microtime(true);
 
 // Windows fix
 setlocale(LC_MONETARY, 'en_GB');
@@ -53,26 +54,12 @@ function errorHandler($errno, $errstr, $errfile, $errline, array $errcontext) {
 
 function string($name, $print = true, $langcode = null) {
     global $LANG;
-    if (!$langcode) {
-        $langcode = $LANG->code;
-    }
+    $result = $LANG->findString($name, $langcode);
 
-    if (!isset($LANG->strings[$langcode])) {
-        $langcode = 'en';
-    }
-
-    if (isset($LANG->strings[$langcode][$name])) {
-        if ($print) {
-            echo $LANG->strings[$langcode][$name];
-        } else {
-            return $LANG->strings[$langcode][$name];
-        }
+    if ($print) {
+        echo $result;
     } else {
-        if ($print) {
-            echo "!NF->$name<-NF!";
-        } else {
-            return "!NF->$name<-NF!";
-        }
+        return $result;
     }
 }
 
